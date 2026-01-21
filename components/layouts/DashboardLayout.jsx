@@ -1,78 +1,142 @@
 import React from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { BellIcon, BookIcon, CalendarDaysIcon, GraduationCapIcon, LayoutDashboardIcon, MessageCircleIcon, UserIcon } from "lucide-react";
+import { useAuth, UserButton } from '@clerk/clerk-react'
+import { BellIcon, BookIcon, CalendarDaysIcon, GraduationCapIcon, LayoutDashboardIcon, MessageCircleIcon } from "lucide-react"
+import { profile } from '../../src/assets/assets'
 
 const DashboardLayout = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const pathname = location.pathname;
+  const navigate = useNavigate()
+  const location = useLocation()
+  const pathname = location.pathname
+  const { user } = useAuth()
   
-  // Fix the navigate function - it should be a callback
-  const handleNavigate = (link) => () => navigate(link);
+  const handleNavigate = (link) => () => navigate(link)
 
-  
-const options = [
-    { name: 'Dashboard', link: '/',}, 
-    { name: 'Courses', link: '/courses',},
-    { name: 'Shedule', link: '/schedule',},
-    { name: 'Grades', link: '/grades',},
-    { name: 'Notifications', link: '/notifications',},
-  ];
+  const options = [
+    { name: 'Dashboard', link: '/dashboard', icon: <LayoutDashboardIcon className='w-5 h-5' /> },
+    { name: 'Courses', link: '/dashboard/courses', icon: <BookIcon className='w-5 h-5' /> },
+    { name: 'Schedule', link: '/dashboard/schedule', icon: <CalendarDaysIcon className='w-5 h-5' /> },
+    { name: 'Grades', link: '/dashboard/grades', icon: <GraduationCapIcon className='w-5 h-5' /> },
+    { name: 'Notifications', link: '/dashboard/notifications', icon: <BellIcon className='w-5 h-5' /> },
+  ]
 
-  
   return (
-    <div className='w-full h-full flex bg-slate-100'>
-      {/* Sidebar */}
-      <div className='max-sm:w-16 max-w-70 pt-16 h-full z-2 fixed justify-center top-0 left-0'>
-        <div className='p-6 space-y-6 bg-indigo-100 border-r h-full border-blue-400'>
+    <div className='flex w-full min-h-screen overflow-hidden bg-slate-100'>
+      {/* Desktop Sidebar */}
+      <div className='fixed top-0 left-0 hidden w-64 h-screen pt-20 bg-indigo-100 border-r border-blue-400 md:block'>
+        <div className='flex flex-col h-full pt-6'>
           {/* Profile Section */}
-          <div className='max-sm:hidden w-40 h-40 bg-gray-50 border border-gray-400 rounded-full flex items-center justify-center mx-auto shadow-md'>
-            <UserIcon className='h-20 w-20 text-gray-600' />
+          <div className='flex flex-col items-center px-4 mb-8'>
+              {/* User Button for Desktop */}
+              {/* <div className="p-4 mt-auto border-blue-300">
+                <UserButton
+                  appearance={{
+                    elements: {
+                      userButtonBox: "w-full justify-start",
+                      userButtonTrigger: "w-full p-3 bg-white rounded-lg hover:bg-gray-50",
+                    },
+                  }}
+                  afterSignOutUrl="/"
+                />
+              </div> */}
+
+            <div className='relative w-20 h-20 mb-4 overflow-hidden border border-gray-400 rounded-full shadow-md bg-gray-50'>
+              {user?.imageUrl ? (
+                <img 
+                  src={user.imageUrl} 
+                  alt="Profile" 
+                  className='object-cover w-full h-full'
+                />
+              ) : profile?.userImage ? (
+                <img 
+                  src={profile.userImage} 
+                  alt="Profile" 
+                  className='object-cover w-full h-full'
+                />
+              ) : (
+                <div className="flex items-center justify-center w-full h-full bg-linear-to-br from-blue-100 to-indigo-100">
+                  <span className="text-2xl font-bold text-blue-600">
+                    {user?.firstName?.charAt(0) || 'Alex Wang'}
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="text-center">
+              <h3 className="font-semibold text-gray-900">
+                {user?.fullName || 'Alex Wang'}
+              </h3>
+              <p className="text-sm text-gray-600">
+                {user?.primaryEmailAddress?.emailAddress || 'alexWang@gmail.com'}
+              </p>
+            </div>
           </div>
           
           {/* Navigation Options */}
-          <div className='space-y-4 max-sm:flex flex-col items-center'>
+          <div className='flex flex-col items-center px-4 space-y-2'>
             {options.map((opt) => (
               <button
                 key={opt.name}
                 onClick={handleNavigate(opt.link)}
                 className={`
-                  w-full max-sm:w-10 max:h-6 text-left p-3 rounded-lg text-sm text-black flex max-sm:justify-center items-center
+                  w-full text-left p-3 rounded-lg text-sm flex items-center gap-3
                   ${pathname === opt.link 
-                    ? 'bg-blue-400 text-white' 
-                    : 'hover:bg-indigo-600'
+                    ? 'bg-blue-400 text-white shadow-md' 
+                    : 'hover:bg-indigo-200 text-black'
                   }
-                  transition-colors duration-200
+                  transition-all duration-200
                 `}
               >
-                <div className='flex justify-center items-center gap-2'>
-                  <div className=''>
-                      {opt.name === 'Dashboard' && <LayoutDashboardIcon className='w-6 h-6' />}
-                      {opt.name === 'Courses' && <BookIcon className='w-6 h-6' />}
-                      {opt.name === 'Shedule' && <CalendarDaysIcon className='w-6 h-6' />}
-                      {opt.name === 'Grades' && <GraduationCapIcon className='w-6 h-6' />}
-                      {opt.name === 'Notifications' && <BellIcon className='w-6 h-6' />}
-                  </div>
-                  <span className='max-sm:hidden'>{opt.name}</span>
+                <div className='flex items-center justify-center'>
+                  {opt.icon}
                 </div>
+                <span>{opt.name}</span>
               </button>
             ))}
+          </div>
+          
+        </div>
+      </div>
+
+      {/* Mobile Sidebar */}
+      <div className='fixed top-0 left-0 z-10 w-16 h-screen pt-20 bg-gray-100 border-r border-blue-400 md:hidden'>
+        <div className='flex flex-col items-center justify-center w-full gap-2 px-2'>
+          {options.map((opt) => (
+            <button
+              key={opt.name}
+              onClick={handleNavigate(opt.link)}
+              className={`p-2 rounded-md ${
+                pathname === opt.link 
+                  ? 'bg-blue-400 text-white' 
+                  : 'text-gray-700'
+              }`}
+              title={opt.name}
+            >
+              {opt.icon}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className='flex-1 w-full min-h-screen ml-16 overflow-hidden md:ml-64'>
+        <div className='h-full px-2 overflow-y-auto'>
+          {/* Mobile Top Bar with User Info */}
+          <div className='w-full pt-4 overflow-x-hidden pb-15'>
+            <Outlet />
           </div>
         </div>
       </div>
       
-      {/* Main Content Area */}
-      <div className='flex-1 max-sm:ml-16 ml-52 h-[calc(100vh-4rem)] overflow-hidden bg-white/85'>
-        <Outlet /> {/* This should NOT have overflow */}
-      </div>
-            
       {/* Floating Message Button */}
-      <div onClick={handleNavigate('/ai-chat')} className='fixed z-20 bottom-5 right-3 h-16 w-16 bg-white rounded-full border border-green-400 shadow-xl flex items-center justify-center hover:shadow-xl transition-shadow cursor-pointer'>
-        <MessageCircleIcon className='w-8 h-8 text-green-400' />
-      </div>
+      <button
+        onClick={handleNavigate('/ai-chat')}
+        className='fixed z-20 flex items-center justify-center transition-all duration-200 bg-white border border-orange-400 rounded-full shadow-xl cursor-pointer w-14 h-14 md:w-16 md:h-16 bottom-7 right-7 hover:shadow-2xl hover:scale-105'
+        aria-label="AI Chat"
+      >
+        <MessageCircleIcon className='text-[#002d59] w-5 h-5 md:w-8 md:h-8' />
+      </button>
     </div>
   )
 }
 
 export default DashboardLayout
-

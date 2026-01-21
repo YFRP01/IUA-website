@@ -1,38 +1,108 @@
 import React from 'react'
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom'
+import { SignedIn, SignedOut } from '@clerk/clerk-react'
+import { SignIn, SignUp } from '@clerk/clerk-react'
 import Navbar from '../components/Navbar'
-import { Route, Routes } from 'react-router-dom'
+import LandingPage from '../pages/LandingPage'
+import ProtectedRoute from '../components/Auth/ProtectedRoute'
 import DashboardLayout from '../components/layouts/DashboardLayout'
 import Courses from '../pages/Courses'
 import Notifications from '../pages/Notifications'
 import Grades from '../pages/Grades'
-import Dashboard from '../pages/Dashboard'
 import Schedule from '../pages/Schedule'
 import AiChat from '../pages/AiChat'
-import Course from '../pages/Course'
-import CourseLayout from '../components/layouts/CourseLayout'
+import Dashboard from '../pages/Dashboard'
 
+
+// Main App component
 const App = () => {
   return (
-    <div className='w-full relative bg-slate-100 min-h-screen'>
-      <Navbar />
-      <div className='w-full'>
-        <Routes>
-          {/* All routes use DashboardLayout */}
-          <Route path="/" element={<DashboardLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path='/courses' element={<CourseLayout/>}>
-              <Route path="/courses" element={<Courses />} />
-            </Route>
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/grades" element={<Grades />} />
-            <Route path="/schedule" element={<Schedule />} />
-          </Route>
-          <Route path='/ai-chat' element={<AiChat/>}/>
-          <Route path="/courses/:courseId" element={<Course />} />
+      <Router>
+        <div className='relative w-full min-h-screen bg-slate-100'>
+          {/* Conditionally render Navbar based on auth state */}
+          <SignedIn>
+            <Navbar />
+          </SignedIn>
           
-        </Routes>
-      </div>
-    </div>
+          <div className='w-full pt-16'>
+            <Routes>
+              {/* Root route - conditionally redirect based on auth */}
+              <Route 
+                path="/" 
+                element={
+                  <>
+                    <SignedIn>
+                      <Navigate to="/dashboard" replace />
+                    </SignedIn>
+                    <SignedOut>
+                      <LandingPage />
+                    </SignedOut>
+                  </>
+                } 
+              />
+              
+              {/* Auth routes */}
+              <Route 
+                path="/sign-in" 
+                element={
+                  <>
+                    <SignedIn>
+                      <Navigate to="/dashboard" replace />
+                    </SignedIn>
+                    <SignedOut>
+                      <SignIn />
+                    </SignedOut>
+                  </>
+                } 
+              />
+              
+              <Route 
+                path="/sign-up" 
+                element={
+                  <>
+                    <SignedIn>
+                      <Navigate to="/dashboard" replace />
+                    </SignedIn>
+                    <SignedOut>
+                      <SignUp />
+                    </SignedOut>
+                  </>
+                } 
+              />
+              
+
+              {/* Protected Dashboard Routes */}
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="courses" element={<Courses />} />
+                <Route path="notifications" element={<Notifications />} />
+                <Route path="grades" element={<Grades />} />
+                <Route path="schedule" element={<Schedule />} />
+              </Route>
+
+              {/* Individual Protected Routes */}
+              <Route 
+                path="/ai-chat" 
+                element={
+                  <ProtectedRoute>
+                    <AiChat />
+                  </ProtectedRoute>
+                } 
+              />
+
+              {/* Fallback route */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+        </div>
+      </Router>
   )
 }
 
